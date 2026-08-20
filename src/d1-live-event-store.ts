@@ -108,7 +108,7 @@ export class D1LiveEventStore implements LiveEventStore {
 
   async getActivityByCapability(
     token: string,
-    purpose: "participant" | "host" | "display" | "report",
+    purpose: "organizer" | "participant" | "host" | "display" | "report",
   ) {
     const row = await this.database
       .prepare(

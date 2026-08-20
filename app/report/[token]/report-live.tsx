@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { FullLiveReport } from "../../../src/live-event";
+import type { AnonymousLiveReport } from "../../../src/live-event";
 
 export function ReportLive({ token }: { token: string }) {
-  const [data, setData] = useState<FullLiveReport | null>(null);
+  const [data, setData] = useState<AnonymousLiveReport | null>(null);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
     const response = await fetch(`/api/report-live/${token}`, { cache: "no-store" });
-    const payload = (await response.json()) as FullLiveReport & { error?: string };
+    const payload = (await response.json()) as AnonymousLiveReport & { error?: string };
     if (!response.ok) throw new Error(payload.error ?? "活动报告暂时不可用。");
     setData(payload);
   }, [token]);
@@ -44,7 +44,7 @@ export function ReportLive({ token }: { token: string }) {
       <div className="surface-card">
         <div className="surface-meta"><span>活动报告</span><span>{data.activity.stage === "complete" ? "已完成" : "进行中"}</span></div>
         <h1>{data.activity.name}</h1>
-        <p className="hero-copy">导出包含参赛名单、两轮完整题目、V1、追加 Prompt、V2、互评票数、可选外部评分和总成绩。</p>
+        <p className="hero-copy">匿名报告包含匿名编号、两轮题目、作品、互评票数、可选外部评分和总成绩；不包含昵称或 Agent 名称。</p>
         <div className="surface-info">
           <div><small>参赛者</small><b>{data.participants.length} 人</b></div>
           <div><small>轮次</small><b>{data.activity.roundCount} 轮</b></div>

@@ -57,7 +57,7 @@ export interface LiveAiScore {
 export interface LiveEventStore {
   getActivityByCapability(
     token: string,
-    purpose: "participant" | "host" | "display" | "report",
+    purpose: "organizer" | "participant" | "host" | "display" | "report",
   ): Promise<LiveActivity | undefined>;
   findSeat(activityId: string, recoveryToken: string): Promise<LiveSeat | undefined>;
   listSeats(activityId: string): Promise<LiveSeat[]>;
@@ -107,7 +107,7 @@ function clean(value: unknown) {
 
 async function requireActivity(
   token: string,
-  purpose: "participant" | "host" | "display" | "report",
+  purpose: "organizer" | "participant" | "host" | "display" | "report",
   store: LiveEventStore,
 ) {
   const activity = await store.getActivityByCapability(clean(token), purpose);
@@ -306,8 +306,12 @@ export async function getDisplayLiveEvent(displayToken: string, store: LiveEvent
   return { ...view, seats: undefined, votes: undefined, scores: undefined };
 }
 
-export async function getFullReport(reportToken: string, store: LiveEventStore) {
-  const activity = await requireActivity(reportToken, "report", store);
+export async function getFullReport(
+  reportToken: string,
+  store: LiveEventStore,
+  purpose: "organizer" | "report" = "report",
+) {
+  const activity = await requireActivity(reportToken, purpose, store);
   const seats = await store.listSeats(activity.id);
   const rounds = await Promise.all(
     activity.rounds.map(async (round, roundIndex) => {
@@ -358,6 +362,35 @@ export async function getFullReport(reportToken: string, store: LiveEventStore) 
 }
 
 export type FullLiveReport = Awaited<ReturnType<typeof getFullReport>>;
+
+export async function getAnonymousReport(reportToken: string, store: LiveEventStore) {
+  const full = await getFullReport(reportToken, store, "report");
+  const labelsBySeat = new Map<string, string>();
+  for (const round of full.rounds) {
+    for (const answer of round.answers) labelsBySeat.set(answer.seatId, answer.anonymousLabel);
+  }
+  return {
+    exportedAt: full.exportedAt,
+    activity: full.activity,
+    participants: full.participants.map((participant) => ({ anonymousLabel: labelsBySeat.get(participant.id) ?? "?" })),
+    rounds: full.rounds.map((round) => ({
+      roundNumber: round.roundNumber,
+      title: round.title,
+      prompt: round.prompt,
+      answers: round.answers.map(({ seatId, anonymousLabel, v1, improvementPrompt, v2 }) => ({ seatId, anonymousLabel, v1, improvementPrompt, v2 })),
+      votes: round.votes.map((vote) => ({
+        voter: labelsBySeat.get(vote.voterSeatId) ?? "?",
+        candidate: labelsBySeat.get(vote.candidateSeatId) ?? "?",
+      })),
+      scores: round.scores.map((score) => ({ anonymousLabel: labelsBySeat.get(score.seatId) ?? "?", score: score.score })),
+      results: round.results.map(({ seatId, nickname, agentName, ...result }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...result })),
+    })),
+    totals: full.totals.map(({ seatId, nickname, agentName, ...result }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...result })),
+    awards: full.awards.map(({ seatId, nickname, agentName, ...award }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...award })),
+  };
+}
+
+export type AnonymousLiveReport = Awaited<ReturnType<typeof getAnonymousReport>>;
 
 function validateContent(value: unknown, label: string, maxLength: number) {
   const content = clean(value);

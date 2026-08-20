@@ -1,6 +1,6 @@
 import { getD1Database } from "../../../../db";
 import { D1LiveEventStore } from "../../../../src/d1-live-event-store";
-import { getFullReport, LiveEventError } from "../../../../src/live-event";
+import { getAnonymousReport, LiveEventError } from "../../../../src/live-event";
 
 export async function GET(
   _request: Request,
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     return Response.json(
-      await getFullReport((await params).token, new D1LiveEventStore(getD1Database())),
+      await getAnonymousReport((await params).token, new D1LiveEventStore(getD1Database())),
     );
   } catch (error) {
     if (error instanceof LiveEventError) {

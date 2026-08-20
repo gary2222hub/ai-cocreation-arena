@@ -5,6 +5,7 @@ import {
   InMemoryLiveEventStore,
   LiveEventError,
   advanceLiveEvent,
+  getAnonymousReport,
   getFullReport,
   getHostLiveEvent,
   getParticipantLiveEvent,
@@ -190,6 +191,16 @@ test("report capability exports answers without recovery tokens", async () => {
   assert.equal(report.activity.name, "明日共创活动");
   assert.equal(report.rounds[0].answers[0].v1, "可导出的回答");
   assert.equal("recoveryToken" in report.participants[0], false);
+});
+
+test("report capability is anonymous while organizer export keeps identities", async () => {
+  const store = setup();
+  await saveRoundEntry("event-a", "recover-a", { v1: "匿名回答" }, store);
+  const anonymous = await getAnonymousReport("report-a", store);
+  assert.equal("nickname" in anonymous.participants[0], false);
+  assert.equal(anonymous.rounds[0].answers[0].v1, "匿名回答");
+  const organizer = await getFullReport("report-a", store);
+  assert.equal(organizer.participants[0].nickname, "Gary");
 });
 
 test("every participant receives exactly one final award", async () => {
