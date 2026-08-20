@@ -1,2 +1,1 @@
--- No live invitation codes are committed to the public repository.
--- Provision invitation codes through a private deployment channel.
+-- Intentionally empty: each deployment creates its own invitations privately.

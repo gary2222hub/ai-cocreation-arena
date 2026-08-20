@@ -112,13 +112,13 @@ function setup() {
   return database;
 }
 
-test("live deployment includes three one-time organizer invitations", () => {
+test("public migrations do not include organizer invitations", () => {
   const database = setup();
   assert.equal(
     database.sqlite
       .prepare("SELECT COUNT(*) AS count FROM invitations WHERE code LIKE 'LIVE-%' AND status = 'active'")
       .get()?.count,
-    3,
+    0,
   );
 });
 
