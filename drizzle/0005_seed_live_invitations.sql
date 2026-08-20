@@ -1,1 +1,0 @@
--- Intentionally empty: each deployment creates its own invitations privately.
