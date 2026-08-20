@@ -26,7 +26,7 @@ export function rankForScore(rows: Array<{ score: number }>, index: number) {
 }
 
 export function buildOpeningScript(activityName: string) {
-  return `大家早上好，欢迎来到${activityName}。\n\n今天，我们会一起完成两轮挑战。每一轮先提交第一版回答，再用一次追加 Prompt，让方案继续进化。之后会匿名互评、揭晓交流，并以大家的互评票数形成结果。\n\n请大家留意主持人的口令。一个阶段结束后，内容会立即锁定；没有保存的回答，不能补交，也不会进入后续展示和计分。\n\n现在，请确认网络和自己的 Agent 都已经准备好。放轻松，尽情去想，也期待大家带走一个真正值得尝试的新点子。`;
+  return `大家好，欢迎来到${activityName}。这是一场用 AI 共同思考、共同选择的两轮共创活动。\n\n请先确认你已经在候场页面填写昵称和正在使用的 AI 工具名称。主持人启动后，页面会显示本轮题目。请在自己的 AI 工具中完成思考，把第一版回答粘贴回页面，并点击保存。\n\n接下来，你会获得一次追加 Prompt 的机会。请用它改进原方案，再保存 V2。之后我们会匿名阅读作品：每人投出一票最喜欢的作品，不能投给自己。\n\n主持人会手动推进每个阶段。阶段一旦结束，未保存的内容就不能补交，也不能修改。身份揭晓后，我们会自由交流，并按互评票数公布结果。\n\n现在请检查网络、打开你的 AI 工具，准备开始。`;
 }
 
 export function buildAiScoringBrief(input: {

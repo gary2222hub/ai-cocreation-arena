@@ -3,11 +3,13 @@ import test from "node:test";
 
 import { buildAdvanceWarning, buildAiScoringBrief, buildOpeningScript, rankForScore } from "../src/live-guidance.ts";
 
-test("opening script explains the irreversible manual stage rule", () => {
+test("opening script explains how participants use the activity and its irreversible stages", () => {
   const script = buildOpeningScript("明日活动");
   assert.match(script, /明日活动/);
-  assert.match(script, /立即锁定/);
+  assert.match(script, /阶段一旦结束/);
   assert.match(script, /不能补交/);
+  assert.match(script, /点击保存/);
+  assert.match(script, /不能投给自己/);
 });
 
 test("AI scoring brief is anonymous and covers every work", () => {
