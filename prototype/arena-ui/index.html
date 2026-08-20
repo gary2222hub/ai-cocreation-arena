@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 共创场 · 交互原型</title>
+  <!-- PROTOTYPE: one Swiss-stage direction; participant layouts A/B via ?variant=. -->
+  <style>
+    :root {
+      --paper: #f5f5f7;
+      --ink: #1d1d1f;
+      --muted: #6e6e73;
+      --line: #d2d2d7;
+      --blue: #566a78;
+      --blue-dark: #3f505c;
+      --yellow: #ededee;
+      --orange: #b45f4f;
+      --green: #5f806f;
+      --white: #ffffff;
+      --shadow: 0 10px 28px rgba(29, 29, 31, .045);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink); }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif; letter-spacing: -.018em; }
+    button, textarea, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .4; }
+    .app { min-height: 100vh; padding-bottom: 86px; }
+    .topline { height: 1px; background: var(--line); }
+    .masthead { position: sticky; top: 0; z-index: 20; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 24px; padding: 13px 30px; border-bottom: 1px solid rgba(210,210,215,.78); background: rgba(250,250,252,.9); backdrop-filter: blur(20px); }
+    .brand { font-weight: 900; font-size: 22px; letter-spacing: -.05em; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 800; }
+    .phase-chip { display: flex; gap: 10px; align-items: center; border-left: 1px solid var(--line); padding-left: 24px; }
+    .live-dot { width: 9px; height: 9px; border-radius: 99px; background: var(--green); box-shadow: 0 0 0 5px rgba(35, 163, 109, .16); }
+    .timer-mini { font-variant-numeric: tabular-nums; font-weight: 900; font-size: 22px; }
+    .wrap { width: min(1480px, calc(100% - 48px)); margin: 0 auto; }
+    .grid-paper { background-image: none; }
+    .question-band { width: min(1480px, calc(100% - 48px)); margin: 18px auto 0; display: grid; grid-template-columns: 78px 1fr auto; min-height: 92px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: white; }
+    .round-mark { display: grid; place-items: center; border-right: 1px solid var(--line); font-size: 38px; line-height: 1; font-weight: 650; color: var(--blue-dark); }
+    .question-copy { padding: 15px 22px; }
+    .question-copy h1 { margin: 3px 0 0; max-width: 950px; font-size: clamp(26px, 2.4vw, 36px); line-height: 1.05; letter-spacing: -.045em; font-weight: 650; }
+    .copy-action { align-self: center; margin-right: 18px; }
+    .btn { border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--ink); padding: 10px 15px; font-weight: 600; box-shadow: none; transition: background .16s ease, border-color .16s ease; }
+    .btn:hover:not(:disabled) { transform: none; box-shadow: none; background: #f1f1f3; border-color: #b9b9be; }
+    .btn.primary { background: var(--blue); color: white; }
+    .btn.orange { background: white; color: #8c473c; border-color: #d6aaa2; }
+    .btn.ghost { background: transparent; box-shadow: none; }
+    .btn.small { padding: 8px 11px; font-size: 12px; }
+    .deadline { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; margin: 9px 0; border: 1px solid var(--line); border-radius: 12px; background: #fafafa; padding: 10px 14px; font-size: 13px; }
+    .deadline strong { color: var(--ink); }
+    .deadline .save-state { font-weight: 900; white-space: nowrap; }
+    .save-state.ok { color: var(--green); }
+    .save-state.bad { color: #b11c1c; }
+    .workspace { display: grid; grid-template-columns: minmax(310px, .72fr) minmax(500px, 1.5fr); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: white; min-height: 500px; box-shadow: none; }
+    .workspace.vertical { grid-template-columns: 1fr; }
+    .workspace.vertical .brief-panel { border-right: 0; border-bottom: 1px solid var(--ink); display: grid; grid-template-columns: 1fr 1fr; min-height: auto; }
+    .brief-panel { padding: 28px; border-right: 1px solid var(--line); background: #f3f3f5; }
+    .brief-panel h2 { font-size: 32px; line-height: 1.08; margin: 20px 0 16px; letter-spacing: -.045em; font-weight: 650; }
+    .brief-panel p { font-size: 16px; line-height: 1.65; }
+    .rule-stack { display: grid; gap: 10px; margin-top: 22px; }
+    .rule { display: flex; justify-content: space-between; gap: 20px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
+    .editor-panel { display: grid; grid-template-rows: auto 1fr auto; padding: 28px; min-width: 0; }
+    .editor-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 16px; }
+    .editor-head h2 { margin: 0; font-size: 28px; font-weight: 650; }
+    .editor-head span { color: var(--muted); font-size: 13px; }
+    textarea { width: 100%; min-height: 310px; resize: none; border: 1px solid var(--line); border-radius: 16px; padding: 22px; background: #fbfbfd; color: var(--ink); font-size: 18px; line-height: 1.65; outline: none; }
+    textarea:focus { border-color: #8399b2; box-shadow: 0 0 0 4px rgba(98,125,157,.14); background: white; }
+    .editor-foot { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding-top: 18px; }
+    .editor-actions { display: flex; gap: 10px; }
+    .count { font-variant-numeric: tabular-nums; font-weight: 850; }
+    .tuning-fields { display: grid; grid-template-columns: .72fr 1.28fr; gap: 16px; min-height: 340px; }
+    .tuning-fields label { display: grid; grid-template-rows: auto 1fr; gap: 8px; font-weight: 850; }
+    .tuning-fields textarea { min-height: 280px; font-weight: 400; }
+    .workspace.vertical .tuning-fields { grid-template-columns: 1fr; }
+    .workspace.vertical .tuning-fields textarea { min-height: 180px; }
+    .stage-rail { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; background: #ededf0; border: 1px solid var(--line); border-radius: 12px; padding: 4px; margin: 12px 0; }
+    .stage-step { border: 0; border-radius: 8px; background: transparent; min-height: 38px; padding: 6px; font-size: 10px; font-weight: 600; color: var(--muted); }
+    .stage-step:disabled { opacity: 1; }
+    .stage-step.active { background: var(--blue); color: white; }
+    .stage-step.done { background: #dbe7e1; color: #4f6f60; }
+    .review-grid { display: grid; grid-template-columns: 110px 1fr 310px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; min-height: 540px; background: white; box-shadow: none; }
+    .anon-nav { border-right: 1px solid var(--line); background: #e9edf0; padding: 9px; display: grid; gap: 8px; align-content: start; }
+    .anon { border: 0; border-radius: 14px; background: transparent; color: var(--ink); aspect-ratio: 1; font-size: 28px; font-weight: 720; }
+    .anon.active { background: #dfe4e7; color: var(--ink); }
+    .answer-sheet { padding: 30px; }
+    .answer-sheet h2 { font-size: 64px; margin: 0; }
+    .answer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .answer-box { border-top: 2px solid #91a3b7; padding-top: 12px; line-height: 1.65; }
+    .vote-panel { border-left: 1px solid var(--line); padding: 24px; background: #f0f2f4; }
+    .vote-list { display: grid; gap: 10px; margin: 18px 0; }
+    .vote-option { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; border: 1px solid var(--line); border-radius: 13px; background: white; padding: 9px; text-align: left; }
+    .vote-option.selected { background: #e5e9eb; }
+    .rank { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; background: #45474b; color: white; font-weight: 700; }
+    .host-shell { display: grid; grid-template-columns: 250px 1fr; min-height: calc(100vh - 104px); }
+    .host-nav { background: #f1f1f3; color: var(--ink); padding: 28px 20px; border-right: 1px solid var(--line); }
+    .host-nav h1 { font-size: 26px; margin: 0 0 28px; }
+    .host-nav button { display: block; width: 100%; text-align: left; color: var(--muted); background: transparent; border: 0; border-top: 1px solid var(--line); padding: 15px 4px; font-weight: 650; }
+    .host-nav button.active { color: var(--blue-dark); }
+    .host-main { padding: 24px 28px; }
+    .host-hero { display: grid; grid-template-columns: 1fr 300px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: white; box-shadow: none; }
+    .host-hero-copy { padding: 28px; }
+    .host-hero h2 { margin: 8px 0; font-size: clamp(34px, 4vw, 52px); line-height: .95; letter-spacing: -.05em; font-weight: 650; }
+    .clock-card { background: #eef0f1; color: var(--ink); border-left: 1px solid var(--line); padding: 24px; display: grid; align-content: center; text-align: center; }
+    .clock { font-size: 68px; line-height: 1; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.055em; }
+    .overtime { color: var(--orange); }
+    .host-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px; margin-top: 18px; }
+    .panel { border: 1px solid var(--line); border-radius: 16px; background: white; padding: 22px; box-shadow: none; }
+    .panel h3 { margin: 0 0 16px; font-size: 20px; }
+    .roster { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .person { border-top: 1px solid var(--line); padding: 10px 0; display: flex; align-items: center; gap: 9px; font-size: 13px; }
+    .person .letter { width: 28px; height: 28px; display: grid; place-items: center; background: var(--ink); color: white; font-weight: 950; }
+    .person .status { margin-left: auto; color: var(--green); font-weight: 850; }
+    .control-stack { display: grid; gap: 10px; }
+    .impact { background: #f5f5f6; border-left: 3px solid #9a9aa0; border-radius: 8px; padding: 14px; font-size: 13px; line-height: 1.5; }
+    .import-error { margin-top: 12px; background: #ffe6e1; border: 1px solid #d23b27; padding: 12px; color: #8d1c0d; font-size: 13px; }
+    .display-shell { min-height: calc(100vh - 1px); background: var(--paper); color: var(--ink); display: grid; grid-template-rows: auto 1fr auto; }
+    .display-head { display: flex; justify-content: space-between; align-items: center; padding: 20px 34px; border-bottom: 1px solid var(--line); background: white; }
+    .display-head .brand { font-size: 25px; }
+    .display-main { display: grid; grid-template-columns: .78fr 1.22fr; min-width: 0; overflow: hidden; }
+    .display-question { padding: 50px; display: grid; align-content: center; background: #f1f1f3; color: var(--ink); }
+    .display-question h1 { font-size: clamp(42px, 4.6vw, 72px); line-height: .95; margin: 16px 0; letter-spacing: -.055em; font-weight: 650; }
+    .display-timer { min-width: 0; overflow: hidden; padding: 38px 20px; display: grid; place-items: center; text-align: center; background: white; border-left: 1px solid var(--line); }
+    .display-timer .clock { max-width: 100%; font-size: clamp(108px, 14vw, 220px); color: var(--blue-dark); }
+    .display-timer .clock.overtime { color: var(--orange); }
+    .display-foot { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 30px; padding: 16px 34px; border-top: 1px solid var(--line); background: white; }
+    .display-warning { font-size: 18px; font-weight: 800; }
+    .display-progress { display: flex; gap: 8px; }
+    .display-progress i { width: 44px; height: 5px; background: #dedee1; }
+    .display-progress i.on { background: var(--blue-dark); }
+    .discussion { display: grid; grid-template-columns: 1fr 360px; min-height: 520px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: white; box-shadow: none; }
+    .discussion-main { padding: 42px; }
+    .discussion-main h2 { font-size: 68px; margin: 12px 0; line-height: .95; letter-spacing: -.06em; }
+    .discussion-side { background: #eef0f1; color: var(--ink); border-left: 1px solid var(--line); padding: 30px; display: grid; align-content: center; text-align: center; }
+    .discussion-side .clock { font-size: 68px; }
+    .results { display: grid; grid-template-columns: .9fr 1.1fr; gap: 18px; }
+    .podium { background: #eef0f1; color: var(--ink); padding: 30px; min-height: 430px; border-radius: 18px; }
+    .podium .winner { font-size: 92px; font-weight: 650; color: var(--blue-dark); }
+    .scores { background: white; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+    .score-row { display: grid; grid-template-columns: 45px 1fr 90px; align-items: center; padding: 15px 18px; border-bottom: 1px solid var(--line); }
+    .score-row b:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+    .prototype-bar { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; z-index: 100; border: 1px solid var(--line); border-radius: 12px; background: rgba(245,245,247,.94); color: var(--muted); padding: 4px; box-shadow: 0 4px 14px rgba(29,29,31,.08); backdrop-filter: blur(16px); }
+    .prototype-bar button { border: 0; border-radius: 8px; background: transparent; color: var(--muted); padding: 7px 10px; font-weight: 600; }
+    .prototype-bar button.active { background: white; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+    .prototype-bar .arrow { font-size: 15px; padding-inline: 8px; }
+    .toast { position: fixed; right: 24px; top: 86px; max-width: 360px; background: var(--ink); color: white; padding: 14px 18px; z-index: 120; box-shadow: var(--shadow); }
+    .hidden { display: none !important; }
+    @media (max-width: 900px) {
+      .masthead { grid-template-columns: 1fr auto; }
+      .phase-chip { display: none; }
+      .question-band { grid-template-columns: 82px 1fr; }
+      .copy-action { display: none; }
+      .workspace, .review-grid, .host-shell, .host-hero, .host-grid, .display-main, .discussion, .results { grid-template-columns: 1fr; }
+      .brief-panel, .vote-panel { border: 0; border-bottom: 1px solid var(--ink); }
+      .host-nav { display: none; }
+      .anon-nav { grid-template-columns: repeat(7, 1fr); border-right: 0; }
+      .anon { aspect-ratio: auto; padding: 10px; }
+      .answer-columns { grid-template-columns: 1fr; }
+      .prototype-bar { width: calc(100% - 18px); overflow-x: auto; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app"></div>
+  <div id="toast" class="toast hidden"></div>
+  <script>
+    const stages = [
+      { key: 'v1', label: '第一版 V1', seconds: 420, hard: true },
+      { key: 'v2', label: '主人调教 V2', seconds: 480, hard: true },
+      { key: 'review', label: '匿名阅卷与投票', seconds: 480, hard: true },
+      { key: 'reveal', label: '身份揭晓', seconds: 60, hard: false },
+      { key: 'talk', label: '个人讲解', seconds: 420, hard: true },
+      { key: 'discussion', label: '自由交流', seconds: 900, hard: false, open: true },
+      { key: 'result', label: 'AI 裁判与结果', seconds: 240, hard: false }
+    ];
+    const people = [
+      ['A','林霁','Atlas'], ['B','周然','Kite'], ['C','陈嘉','Moss'], ['D','你','Nova'],
+      ['E','王舒','Echo'], ['F','赵野','Rune'], ['G','孙言','Milo']
+    ];
+    const answers = {
+      A: ['AI 同事不是一个工具席位，而是一份可被检验的责任。它每天把散落的客户声音收束成三条可行动判断。', '我会先让它指出证据缺口，再给建议；人负责决定目标、承担取舍和解释后果。'],
+      B: ['招聘一位“反方同事”：每次决策前，它只负责寻找我们最容易忽略的失败路径。', '它不追求多写，而是持续逼问：如果结论错了，最先出现的信号是什么？'],
+      C: ['让 AI 成为团队的上下文管理员，维护共同事实，不替代负责人做判断。', '把会议、项目和反馈连成证据链；每条建议都标明来源、时间与不确定性。'],
+      D: ['我的 AI 同事叫“边界教练”，它会在方案中把机器能做、人必须做的部分明确拆开。', '请用明天就能执行的方式重写，并指出哪一步必须由负责人亲自确认。'],
+      E: ['它是新人成功教练，把隐性经验变成可演练的场景，而不是写更多制度。', '每次只生成一个最小练习，并根据真实反馈更新下一题。'],
+      F: ['AI 同事负责把业务异常变成问题清单，帮助团队更早发现变化。', '不要给答案，先按影响、证据强度和可逆性排列问题。'],
+      G: ['我会招聘一名组织镜子：它观察承诺与实际动作之间的差距。', '输出必须克制，只报告可验证差异，并把解释权留给当事人。']
+    };
+    const state = {
+      stage: 0,
+      remaining: stages[0].seconds,
+      overtime: 0,
+      running: false,
+      saved: true,
+      submitted: false,
+      locked: false,
+      answer: '我想招聘一名“共同事实编辑”。它每天从项目记录和客户反馈中提炼三条经过来源验证的变化，让团队先看见同一个现实，再讨论行动。',
+      activeAnon: 'A',
+      votes: [],
+      importError: false,
+      projectedDelay: 0
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    function params() {
+      const p = new URLSearchParams(location.search);
+      return { surface: p.get('surface') || 'participant', variant: p.get('variant') || 'A' };
+    }
+    function setParams(surface, variant = 'A') {
+      const p = new URLSearchParams(location.search);
+      p.set('surface', surface);
+      if (surface === 'participant') p.set('variant', variant); else p.delete('variant');
+      history.replaceState({}, '', `${location.pathname}?${p.toString()}`);
+      render();
+    }
+    function fmt(sec) {
+      const m = Math.floor(Math.abs(sec) / 60).toString().padStart(2,'0');
+      const s = (Math.abs(sec) % 60).toString().padStart(2,'0');
+      return `${m}:${s}`;
+    }
+    function currentStage() { return stages[state.stage]; }
+    function warningText() {
+      const st = currentStage();
+      if (st.key === 'review') return '必须选满前三名并成功提交；未完成选票在截止时无效。';
+      if (st.open) return '15 分钟是计划时长；时间到后继续交流，等待主持人明确结束。';
+      if (st.key === 'result') return '导入结果必须整包通过校验，错误不会覆盖上次有效结果。';
+      return '倒计时结束后立即锁定；只提交最后一次显示“已保存”的内容，空白记为未作答。';
+    }
+    function timerMarkup(big = false) {
+      const st = currentStage();
+      if (st.open && state.overtime > 0) return `<div class="${big ? 'clock ' : ''}overtime">+${fmt(state.overtime)}</div><div class="eyebrow">已延长</div>`;
+      return `<div class="${big ? 'clock' : 'timer-mini'}">${fmt(state.remaining)}</div>`;
+    }
+    function masthead() {
+      return `<div class="topline"></div><header class="masthead"><div class="brand">AI 共创场 <span class="eyebrow">Prototype</span></div><div class="phase-chip"><span class="live-dot"></span><span>${currentStage().label}</span></div>${timerMarkup()}</header>`;
+    }
+    function questionBand() {
+      return `<section class="question-band"><div class="round-mark">01</div><div class="question-copy"><div class="eyebrow">Round 01 · Original Prompt</div><h1>招聘一名 AI 同事</h1></div><div class="copy-action"><button class="btn" data-action="copy">复制原始 Prompt</button></div></section>`;
+    }
+    function stageRail() {
+      return `<div class="stage-rail">${stages.map((s,i) => `<button class="stage-step ${i===state.stage?'active':i<state.stage?'done':''}" disabled>${i+1}. ${s.label}</button>`).join('')}</div>`;
+    }
+    function deadline() {
+      return `<div class="deadline"><strong>截止规则</strong><span>${warningText()}</span><span class="save-state ${state.saved?'ok':'bad'}">${state.saved?'● 已保存':'● 保存失败'}</span></div>`;
+    }
+    function editor(layout) {
+      const locked = state.locked || state.submitted;
+      return `<div class="workspace ${layout==='B'?'vertical':''}">
+        <aside class="brief-panel"><div><div class="eyebrow">任务 / V1</div><h2>先让 AI 给出<br>未经调教的第一版</h2><p>复制统一 Prompt 到你自己的 AI 工具，将生成结果粘贴到右侧。不要追加任何新要求。</p></div><div class="rule-stack"><div class="rule"><b>生成方式</b><span>站外生成</span></div><div class="rule"><b>内容上限</b><span>500 字</span></div><div class="rule"><b>截止方式</b><span>到点自动冻结</span></div></div></aside>
+        <section class="editor-panel"><div class="editor-head"><div><span>YOUR RESPONSE</span><h2>${state.submitted?'已提交，可在截止前撤回':'粘贴你的 V1'}</h2></div><span>自动保存 · 仅服务器成功版本有效</span></div><textarea maxlength="500" ${locked?'disabled':''}>${esc(state.answer)}</textarea><div class="editor-foot"><span class="count">${[...state.answer].length} / 500</span><div class="editor-actions"><button class="btn ghost" data-action="save-fail">模拟保存失败</button>${state.submitted?'<button class="btn orange" data-action="withdraw">撤回继续编辑</button>':'<button class="btn primary" data-action="submit">提交 V1 · ⌘↵</button>'}</div></div></section>
+      </div>`;
+    }
+    function tuning(layout) {
+      return `<div class="workspace ${layout==='B'?'vertical':''}">
+        <aside class="brief-panel"><div><div class="eyebrow">任务 / V2</div><h2>只追加一条 Prompt<br>让 Agent 完成改进</h2><p>先写下唯一一条调教指令，再把它交给站外 AI。平台同时保留 V1、追加 Prompt 和 V2。</p></div><div class="rule-stack"><div class="rule"><b>追加次数</b><span>仅一条</span></div><div class="rule"><b>各字段上限</b><span>500 字</span></div><div class="rule"><b>保存状态</b><span>服务器已保存</span></div></div></aside>
+        <section class="editor-panel"><div class="editor-head"><div><span>COACH YOUR AGENT</span><h2>追加 Prompt 与 V2</h2></div><button class="btn small" data-action="copy">再次复制原始 Prompt</button></div><div class="tuning-fields"><label>唯一一条追加 Prompt<textarea maxlength="500">请用明天就能执行的方式重写，并指出哪一步必须由负责人亲自确认。</textarea></label><label>粘贴 Agent 生成的 V2<textarea maxlength="500">我想招聘一名“共同事实编辑”。它每天把项目记录和客户反馈整理为三条可验证变化，每条都标注来源与不确定性。负责人必须亲自确认优先级、资源取舍与对团队的解释。</textarea></label></div><div class="editor-foot"><span class="count">追加 Prompt 34 / 500 · V2 77 / 500</span><button class="btn primary" data-action="submit">提交 V2 · ⌘↵</button></div></section>
+      </div>`;
+    }
+    function reveal() {
+      return `<section class="panel grid-paper" style="min-height:520px"><div class="eyebrow">Identity Reveal · Round 01</div><h2 style="font-size:54px;margin:10px 0 28px">匿名身份揭晓</h2><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px">${people.map(p=>`<div style="border:1px solid var(--ink);background:white;padding:18px"><div style="font-size:58px;font-weight:950">${p[0]}</div><b>${p[1]}</b><br><span>${p[2]}</span></div>`).join('')}</div><p style="font-size:18px;margin-top:30px">互评结果已经冻结；身份揭晓不改变任何选票。</p></section>`;
+    }
+    function talk() {
+      return `<section class="discussion"><main class="discussion-main grid-paper"><div class="eyebrow">One Minute Talk · 1 / 7</div><h2>A · 林霁</h2><p style="font-size:22px;max-width:720px;line-height:1.55">请用一分钟讲清：你的第一版哪里不够好？你追加的一条 Prompt 改变了什么？最终哪项判断必须由人承担？</p></main><aside class="discussion-side"><div class="clock">01:00</div><p>个人讲解 · 每人一分钟</p></aside></section>`;
+    }
+    function review() {
+      const a = state.activeAnon;
+      return `<div class="review-grid"><nav class="anon-nav">${Object.keys(answers).map(k=>`<button class="anon ${k===a?'active':''}" data-anon="${k}">${k}</button>`).join('')}</nav><main class="answer-sheet"><div class="eyebrow">Anonymous Review · ${a==='D'?'你的回答':'身份将在投票后揭晓'}</div><h2>${a}</h2><div class="answer-columns"><article class="answer-box"><b>V1 · 原生回答</b><p>${answers[a][0]}</p></article><article class="answer-box"><b>V2 · 主人调教后</b><p>${answers[a][1]}</p></article></div></main><aside class="vote-panel"><div class="eyebrow">Peer Vote · 3 / 2 / 1</div><h2>选出前三名</h2><div class="vote-list">${Object.keys(answers).map(k=>`<button class="vote-option ${state.votes.includes(k)?'selected':''}" data-vote="${k}" ${k==='D'?'disabled':''}><span class="rank">${state.votes.indexOf(k)>=0?state.votes.indexOf(k)+1:'–'}</span><b>匿名 ${k}</b><span>${k==='D'?'你的回答':'选择'}</span></button>`).join('')}</div><button class="btn primary" data-action="vote-submit" ${state.votes.length!==3?'disabled':''}>提交完整选票</button></aside></div>`;
+    }
+    function discussion() {
+      return `<div class="discussion"><main class="discussion-main grid-paper"><div class="eyebrow">Open Stage · Round 01</div><h2>自由交流</h2><p style="font-size:22px;max-width:720px;line-height:1.55">围绕本轮最有启发的差异展开讨论。15 分钟是计划时长，不是强制结束；主持人会根据现场状态决定何时收束。</p><div class="impact"><b>不会自动开启下一 Prompt。</b><br>自由交流结束后仍将经过 AI 裁判结果、本轮结果和休息。</div></main><aside class="discussion-side">${timerMarkup(true)}<p>计划时长 15:00</p></aside></div>`;
+    }
+    function results() {
+      const scores = [['林霁 · Atlas','87.42'],['你 · Nova','85.67'],['陈嘉 · Moss','82.31'],['周然 · Kite','79.54'],['王舒 · Echo','76.20']];
+      return `<div class="results"><section class="podium"><div class="eyebrow">Round 01 Winner</div><div class="winner">A</div><h2 style="font-size:36px">林霁 · Atlas</h2><p>互评 43.89 + AI 裁判 43.53</p><button class="btn" data-action="next-round">进入 8 分钟休息</button></section><section class="scores">${scores.map((s,i)=>`<div class="score-row"><b>${i+1}</b><span>${s[0]}</span><b>${s[1]}</b></div>`).join('')}</section></div>`;
+    }
+    function participant() {
+      const {variant} = params();
+      let content = editor(variant);
+      if (currentStage().key === 'v2') content = tuning(variant);
+      if (currentStage().key === 'review') content = review();
+      if (currentStage().key === 'reveal') content = reveal();
+      if (currentStage().key === 'talk') content = talk();
+      if (currentStage().key === 'discussion') content = discussion();
+      if (currentStage().key === 'result') content = results();
+      return `${masthead()}${questionBand()}<main class="wrap">${stageRail()}${deadline()}${content}</main>`;
+    }
+    function host() {
+      const st = currentStage();
+      const nextLabel = st.key==='discussion'?'结束自由交流':st.key==='result'?'进入休息':`结束「${st.label}」`;
+      return `<div class="topline"></div><div class="host-shell"><aside class="host-nav"><h1>AI 共创场</h1><div class="eyebrow">主持控制台</div>${stages.map((s,i)=>`<button class="${i===state.stage?'active':''}">${String(i+1).padStart(2,'0')} · ${s.label}</button>`).join('')}</aside><main class="host-main"><section class="host-hero"><div class="host-hero-copy"><div class="eyebrow">Round 01 / Live Control</div><h2>${st.label}</h2><p>${warningText()}</p></div><div class="clock-card">${timerMarkup(true)}<button class="btn" style="margin-top:20px" data-action="toggle-timer">${state.running?'暂停计时':'开始计时'}</button></div></section><div class="host-grid"><section class="panel"><h3>参赛状态 · 7 / 7</h3><div class="roster">${people.map((p,i)=>`<div class="person"><span class="letter">${p[0]}</span><span><b>${p[1]}</b> · ${p[2]}</span><span class="status">${i<5?'已提交':'编辑中'}</span></div>`).join('')}</div></section><section class="panel"><h3>阶段控制</h3><div class="control-stack"><button class="btn" data-action="ten-seconds">模拟剩余 10 秒</button><button class="btn" data-action="open-overtime">模拟自由交流超时</button><button class="btn" data-action="import-error">模拟 AI 导入错误</button><button class="btn primary" data-action="advance">${nextLabel}</button></div>${state.importError?'<div class="import-error"><b>导入失败 · 未写入</b><br>participants[4].aiScore：总分 52，必须等于四个维度之和且不超过 50。上一次有效结果已保留。</div>':''}<div class="impact" style="margin-top:14px">没有“回退阶段”。硬截止阶段仅在所有有效参赛者完成后才能提前结束。</div></section></div></main></div>`;
+    }
+    function display() {
+      const st = currentStage();
+      const title = st.key==='discussion'?'自由交流':st.key==='result'?'本轮结果':st.label;
+      return `<div class="display-shell"><header class="display-head"><div class="brand">AI 共创场</div><div class="eyebrow">Round 01 / ${st.label}</div></header><main class="display-main"><section class="display-question"><div class="eyebrow">Current Stage</div><h1>${title}</h1><p style="font-size:22px;max-width:800px">${st.key==='discussion'?'围绕最有启发的差异展开讨论，主持人决定何时结束。':'招聘一名 AI 同事'}</p></section><section class="display-timer">${timerMarkup(true)}<div class="eyebrow">${st.open&&state.overtime>0?'整体会议相应顺延':'剩余时间'}</div></section></main><footer class="display-foot"><div class="display-warning">${warningText()}</div><div class="display-progress">${stages.map((_,i)=>`<i class="${i<=state.stage?'on':''}"></i>`).join('')}</div></footer></div>`;
+    }
+    const modes = [
+      ['participant','A','参赛者 A · 双栏'], ['participant','B','参赛者 B · 纵向'], ['host','A','主持控制台'], ['display','A','现场大屏']
+    ];
+    function switcher() {
+      const p = params();
+      const current = modes.findIndex(m => m[0]===p.surface && (m[0]!=='participant'||m[1]===p.variant));
+      return `<nav class="prototype-bar" aria-label="原型视角切换"><button class="arrow" data-cycle="-1">←</button>${modes.map((m,i)=>`<button class="${i===current?'active':''}" data-mode="${i}">${m[2]}</button>`).join('')}<button class="arrow" data-cycle="1">→</button></nav>`;
+    }
+    function toast(msg) {
+      const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
+      clearTimeout(toast.timer); toast.timer = setTimeout(()=>t.classList.add('hidden'), 2200);
+    }
+    function render() {
+      const p = params();
+      $('#app').innerHTML = p.surface==='host'?host():p.surface==='display'?display():participant();
+      document.body.insertAdjacentHTML('beforeend', switcher());
+      const bars = document.querySelectorAll('.prototype-bar'); bars.forEach((b,i)=>{ if(i<bars.length-1)b.remove(); });
+      bind();
+    }
+    function bind() {
+      document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ const m=modes[+b.dataset.mode]; setParams(m[0],m[1]); });
+      document.querySelectorAll('[data-cycle]').forEach(b=>b.onclick=()=>cycle(+b.dataset.cycle));
+      document.querySelectorAll('[data-anon]').forEach(b=>b.onclick=()=>{state.activeAnon=b.dataset.anon;render();});
+      document.querySelectorAll('[data-vote]').forEach(b=>b.onclick=()=>{
+        const k=b.dataset.vote; const i=state.votes.indexOf(k);
+        if(i>=0) state.votes.splice(i,1); else if(state.votes.length<3) state.votes.push(k);
+        render();
+      });
+      const ta = $('textarea');
+      if (ta) ta.oninput = () => { state.answer=ta.value; state.saved=false; $('.count').textContent=`${[...state.answer].length} / 500`; setTimeout(()=>{state.saved=true;render();},650); };
+      document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.action));
+    }
+    function cycle(delta) {
+      const p=params(); let i=modes.findIndex(m=>m[0]===p.surface&&(m[0]!=='participant'||m[1]===p.variant));
+      i=(i+delta+modes.length)%modes.length; setParams(modes[i][0],modes[i][1]);
+    }
+    function action(a) {
+      if(a==='copy') { navigator.clipboard?.writeText('招聘一名 AI 同事'); toast('原始 Prompt 已复制'); }
+      if(a==='save-fail') { state.saved=false; toast('已模拟保存失败：截止时不会提交未保存修改'); render(); }
+      if(a==='submit') { state.submitted=true; toast('V1 已提交；截止前仍可撤回'); render(); }
+      if(a==='withdraw') { state.submitted=false; state.locked=false; toast('已撤回，可以继续编辑'); render(); }
+      if(a==='vote-submit') toast('完整选票已提交');
+      if(a==='toggle-timer') { state.running=!state.running; render(); }
+      if(a==='ten-seconds') { state.remaining=10; state.overtime=0; state.running=true; render(); }
+      if(a==='open-overtime') { state.stage=5; state.remaining=0; state.overtime=200; state.running=true; render(); }
+      if(a==='import-error') { state.importError=!state.importError; render(); }
+      if(a==='advance') advance();
+      if(a==='next-round') toast('原型：进入休息；下一 Prompt 仍保持隐藏');
+    }
+    function advance() {
+      if(state.stage<stages.length-1) state.stage++;
+      state.remaining=currentStage().seconds; state.overtime=0; state.running=false; state.locked=false; state.submitted=false; state.importError=false;
+      render();
+    }
+    setInterval(()=>{
+      if(!state.running) return;
+      const st=currentStage();
+      if(state.remaining>0) state.remaining--;
+      else if(st.open) { state.overtime++; state.projectedDelay++; }
+      else { state.running=false; state.locked=true; toast(st.hard?'时间到：内容已冻结':'计划时间已到，等待主持人推进'); }
+      render();
+    },1000);
+    document.addEventListener('keydown', e=>{
+      const tag=document.activeElement?.tagName;
+      const editing=['INPUT','TEXTAREA'].includes(tag)||document.activeElement?.isContentEditable;
+      if(!editing && e.key==='ArrowLeft') cycle(-1);
+      if(!editing && e.key==='ArrowRight') cycle(1);
+      if((e.metaKey||e.ctrlKey)&&e.key==='Enter'&&params().surface==='participant') { e.preventDefault(); action('submit'); }
+    });
+    render();
+  </script>
+</body>
+</html>
