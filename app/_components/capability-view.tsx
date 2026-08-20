@@ -71,7 +71,7 @@ export async function CapabilityView({
           <div><small>参赛规模</small><b>{activity.participantLimit} 人</b></div>
           <div><small>轮次</small><b>{activity.roundCount} 轮</b></div>
         </div>
-        {purpose === "organizer" && <a className="primary-button" href={`/api/organizer-report/${token}`}>下载组织者全量导出</a>}
+        {purpose === "organizer" && <div className="capability-actions"><a className="primary-button" href={`/api/organizer-report/${token}`}>下载组织者全量导出</a><a className="secondary-button" href={`/?copy=${token}`}>复制活动配置</a></div>}
       </div>
     </main>
   );

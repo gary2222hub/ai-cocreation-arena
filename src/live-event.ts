@@ -383,10 +383,10 @@ export async function getAnonymousReport(reportToken: string, store: LiveEventSt
         candidate: labelsBySeat.get(vote.candidateSeatId) ?? "?",
       })),
       scores: round.scores.map((score) => ({ anonymousLabel: labelsBySeat.get(score.seatId) ?? "?", score: score.score })),
-      results: round.results.map(({ seatId, nickname, agentName, ...result }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...result })),
+      results: round.results.map(({ seatId, ...result }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...result })),
     })),
-    totals: full.totals.map(({ seatId, nickname, agentName, ...result }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...result })),
-    awards: full.awards.map(({ seatId, nickname, agentName, ...award }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...award })),
+    totals: full.totals.map(({ seatId, ...result }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...result })),
+    awards: full.awards.map(({ seatId, ...award }) => ({ anonymousLabel: labelsBySeat.get(seatId) ?? "?", ...award })),
   };
 }
 

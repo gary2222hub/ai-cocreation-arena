@@ -6,6 +6,7 @@ import {
   createActivity,
   InMemoryActivityStore,
   resolveCapability,
+  resolveOrganizerActivity,
   type CreateActivityInput,
 } from "../src/activity-creation.ts";
 
@@ -182,4 +183,26 @@ test("rejects malformed requests and unsupported templates as configuration erro
         error.code === "invalid-configuration",
     );
   }
+});
+
+test("organizer can copy configuration without exposing participant data", async () => {
+  const store = new InMemoryActivityStore([{ code: "COPY-ME", status: "active" }]);
+  await createActivity(
+    { ...completeInput, invitationCode: "COPY-ME", name: "原活动" },
+    {
+      store,
+      now: () => new Date("2026-08-14T10:00:00.000Z"),
+      token: (() => {
+        const tokens = ["activity-copy", "organizer-copy", "host-copy", "event-copy", "display-copy", "report-copy"];
+        return () => tokens.shift()!;
+      })(),
+      baseUrl: "https://arena.example",
+    },
+  );
+
+  const copied = await resolveOrganizerActivity("organizer-copy", store);
+  assert.equal(copied.name, "原活动");
+  assert.equal(copied.rounds.length, 1);
+  assert.equal("participants" in copied, false);
+  await assert.rejects(() => resolveOrganizerActivity("report-copy", store));
 });

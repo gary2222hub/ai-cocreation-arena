@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type {
   ActivityTemplate,
   CreateActivityInput,
@@ -46,6 +46,8 @@ interface CreatedActivity {
 
 export function CreateActivityForm() {
   const [template, setTemplate] = useState<ActivityTemplate>("prompt-challenge");
+  const [activityName, setActivityName] = useState("AI Prompt 挑战赛");
+  const [participantLimit, setParticipantLimit] = useState(8);
   const [rounds, setRounds] = useState<RoundConfiguration[]>([
     { ...promptRound },
     { ...secondPromptRound },
@@ -53,6 +55,24 @@ export function CreateActivityForm() {
   const [error, setError] = useState("");
   const [created, setCreated] = useState<CreatedActivity | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [copyNotice, setCopyNotice] = useState("");
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("copy");
+    if (!token) return;
+    void fetch(`/api/organizer-activities/${token}`, { cache: "no-store" })
+      .then(async (response) => {
+        const payload = (await response.json()) as { name?: string; participantLimit?: number; template?: ActivityTemplate; rounds?: RoundConfiguration[]; error?: string };
+        if (!response.ok || !payload.rounds) throw new Error(payload.error ?? "活动配置复制失败。");
+        setRounds(payload.rounds.map((round) => ({ ...round })));
+        setTemplate(payload.template ?? "blank");
+        setActivityName(`${payload.name ?? "AI Prompt 挑战赛"}（副本）`);
+        setParticipantLimit(payload.participantLimit ?? 8);
+        setCopyNotice("已复制上一场的题面与轮次配置；参赛者、成绩和投票不会复制。");
+        setTimeout(() => setCopyNotice(""), 6_000);
+      })
+      .catch((error) => setError(error instanceof Error ? error.message : "活动配置复制失败。"));
+  }, []);
 
   function selectTemplate(next: ActivityTemplate) {
     setTemplate(next);
@@ -79,10 +99,10 @@ export function CreateActivityForm() {
     const input: CreateActivityInput = {
       invitationCode: String(form.get("invitationCode") ?? ""),
       template,
-      name: String(form.get("name") ?? ""),
+      name: activityName,
       startsAt: new Date(String(form.get("startsAt"))).toISOString(),
       endsAt: new Date(String(form.get("endsAt"))).toISOString(),
-      participantLimit: Number(form.get("participantLimit")),
+      participantLimit,
       rounds,
     };
 
@@ -137,6 +157,7 @@ export function CreateActivityForm() {
 
   return (
     <form className="panel creation-form" onSubmit={submit}>
+      {copyNotice && <p className="form-success" role="status">{copyNotice}</p>}
       <section className="form-section">
         <div className="section-heading"><span>01</span><div><h2>选择起点</h2><p>模板只提供一个清晰起点，后续内容仍可调整。</p></div></div>
         <div className="template-grid">
@@ -153,10 +174,10 @@ export function CreateActivityForm() {
         <div className="section-heading"><span>02</span><div><h2>活动信息</h2><p>活动规模支持 3–12 人。</p></div></div>
         <div className="field-grid">
           <label className="full">邀请码<input name="invitationCode" placeholder="输入组织者邀请码" autoComplete="off" required /><small>邀请码仅可使用一次，请向平台管理员获取。</small></label>
-          <label className="full">活动名称<input name="name" defaultValue="AI Prompt 挑战赛" required /></label>
+          <label className="full">活动名称<input name="name" value={activityName} onChange={(event) => setActivityName(event.target.value)} required /></label>
           <label>计划开始<input name="startsAt" type="datetime-local" required /></label>
           <label>计划结束<input name="endsAt" type="datetime-local" required /></label>
-          <label>参赛人数<input name="participantLimit" type="number" min="3" max="12" defaultValue="8" required /></label>
+          <label>参赛人数<input name="participantLimit" type="number" min="3" max="12" value={participantLimit} onChange={(event) => setParticipantLimit(Number(event.target.value))} required /></label>
         </div>
       </section>
 

@@ -101,6 +101,14 @@ export async function resolveCapability(
   };
 }
 
+export async function resolveOrganizerActivity(token: string, store: ActivityStore) {
+  const result = await store.getActivityForCapability(token);
+  if (!result || result.purpose !== "organizer") {
+    throw new ActivityCreationError("invalid-capability", "此链接无效，或无权复制当前活动。");
+  }
+  return result.activity;
+}
+
 const paths: Record<LinkPurpose, string> = {
   organizer: "organizer",
   host: "host",
