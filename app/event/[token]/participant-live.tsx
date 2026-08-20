@@ -162,8 +162,8 @@ export function ParticipantLive({
       {["reveal", "discussion", "scoring"].includes(activity.stage) && (
         <section className="live-section">
           <div className="section-intro">
-            <h2>{activity.stage === "reveal" ? "作品身份已经揭晓" : activity.stage === "discussion" ? "自由交流进行中" : "AI 正在独立评分"}</h2>
-            <p>{activity.stage === "discussion" ? "交流不会自动结束，只有主持人可以推进。" : activity.stage === "scoring" ? "主持人只负责确认提交，评分判断由 AI 完成。" : "可以回看每个人的改进过程。"}</p>
+            <h2>{activity.stage === "reveal" ? "作品身份已经揭晓" : activity.stage === "discussion" ? "自由交流进行中" : "结果整理中"}</h2>
+            <p>{activity.stage === "discussion" ? "交流不会自动结束，只有主持人可以推进。" : activity.stage === "scoring" ? "默认按匿名互评票数公布；主持人也可以选择补充外部评分。" : "可以回看每个人的改进过程。"}</p>
           </div>
           <div className="answer-grid">
             {data.answers.map((answer) => (
