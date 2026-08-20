@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { buildOpeningScript } from "../../../src/live-guidance";
 import { HostLive } from "./host-live";
 
@@ -28,7 +28,6 @@ export function HostLobby({ token }: { token: string }) {
   const [working, setWorking] = useState(false);
   const [openingStatus, setOpeningStatus] = useState("");
   const [continueToLive, setContinueToLive] = useState(false);
-  const openingAudio = useRef<HTMLAudioElement | null>(null);
 
   const refresh = useCallback(async () => {
     const response = await fetch(`/api/host-lobbies/${token}`, { cache: "no-store" });
@@ -86,31 +85,21 @@ export function HostLobby({ token }: { token: string }) {
     setOpeningStatus("开场词已复制");
   }
 
-  async function playOpening() {
-    openingAudio.current?.pause();
-    setOpeningStatus("正在生成 AI 语音开场…");
-    try {
-      const response = await fetch(`/api/host-opening-speech/${token}`, { cache: "no-store" });
-      if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error ?? "语音开场暂时不可用，请复制开场词由主持人介绍。");
-      }
-      const url = URL.createObjectURL(await response.blob());
-      const audio = new Audio(url);
-      openingAudio.current = audio;
-      audio.onplay = () => setOpeningStatus("正在播放 AI 语音开场");
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        setOpeningStatus("开场介绍已完成");
-      };
-      audio.onerror = () => {
-        URL.revokeObjectURL(url);
-        setOpeningStatus("语音播放未完成，请使用复制开场词作为备用。");
-      };
-      await audio.play();
-    } catch (caught) {
-      setOpeningStatus(caught instanceof Error ? caught.message : "语音开场暂时不可用，请复制开场词由主持人介绍。");
+  function playOpening() {
+    if (!data || !("speechSynthesis" in window)) {
+      setOpeningStatus("当前浏览器不支持语音朗读，请复制开场词由主持人介绍。");
+      return;
     }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(buildOpeningScript(data.activity.name));
+    utterance.lang = "zh-CN";
+    utterance.rate = 0.95;
+    const voice = window.speechSynthesis.getVoices().find((candidate) => candidate.lang.startsWith("zh"));
+    if (voice) utterance.voice = voice;
+    utterance.onstart = () => setOpeningStatus("正在使用浏览器内置语音开场");
+    utterance.onend = () => setOpeningStatus("开场介绍已完成");
+    utterance.onerror = () => setOpeningStatus("语音朗读未完成，请使用复制开场词作为备用。");
+    window.speechSynthesis.speak(utterance);
   }
 
   if (!data) {
@@ -149,8 +138,8 @@ export function HostLobby({ token }: { token: string }) {
           <p>{locked ? rescueOpen ? "第一版已经启动。匿名阅卷开始前，你仍可移除故障席位，让原参赛者重新加入空位。" : "匿名阅卷已经开始，席位不能再移除或替换。" : "启动第一版会锁定当前人数上限。之后只能通过移除故障席位来腾出恢复位置。"}</p>
           <div className="opening-tools">
             <b>开场介绍</b>
-            <p>优先选择设备上更自然的中文声线。若听感仍不合适，复制后由主持人朗读会更亲切。</p>
-            <div><button type="button" onClick={() => void playOpening()}>播放 AI 语音开场</button><button type="button" onClick={() => void copyOpening()}>复制开场词</button></div>
+            <p>使用浏览器内置中文语音；若听感不合适，复制后由主持人朗读。</p>
+            <div><button type="button" onClick={playOpening}>播放语音开场</button><button type="button" onClick={() => void copyOpening()}>复制开场词</button></div>
             {openingStatus && <small>{openingStatus}</small>}
           </div>
           {error && <p className="form-error" role="alert">{error}</p>}

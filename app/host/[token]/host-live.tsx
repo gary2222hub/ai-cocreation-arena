@@ -160,14 +160,14 @@ export function HostLive({ token }: { token: string }) {
           {activity.stage === "scoring" && (
             <form className="score-list" onSubmit={saveScores} key={activity.roundIndex}>
               <div className="ai-scoring-guide">
-                <b>评分判断由 AI 完成</b>
-                <p>回到创建本活动的 Codex 任务，发送“开始 AI 评分”。AI 会匿名读取本轮作品并直接提交；主持人只需等待进度达到全部已评分。</p>
-                <button type="button" className="secondary-button" onClick={() => void copyScoringBrief()}>{scoringBriefCopied ? "评分材料已复制" : "复制匿名评分材料（应急）"}</button>
+                <b>使用你自己的 AI 工具评分</b>
+                <p>复制匿名评分材料，发送给你选择的 AI 服务或已接入的自有 API；再把返回的分数填入下方。公共版本不会调用任何默认模型账户。</p>
+                <button type="button" className="secondary-button" onClick={() => void copyScoringBrief()}>{scoringBriefCopied ? "评分材料已复制" : "复制匿名评分材料"}</button>
               </div>
               {data.seats.map((seat) => (
                 <label key={seat.id}><span>作品 {data.answers.find((answer) => answer.seatId === seat.id)?.anonymousLabel} · {seat.nickname}<small>{seat.agentName}</small></span><input aria-label={`${seat.nickname} 的 AI 评分`} name={seat.id} type="number" min={0} max={10} step={1} defaultValue={data.scores.find((score) => score.seatId === seat.id)?.score} required /></label>
               ))}
-              <button className="secondary-button" disabled={working}>{working ? "正在保存…" : "保存 AI 返回的评分"}</button>
+              <button className="secondary-button" disabled={working}>{working ? "正在保存…" : "保存评分结果"}</button>
               <p>简单规则：单轮成绩 = AI 评分（0–10）+ 获得的互评票数。</p>
             </form>
           )}
