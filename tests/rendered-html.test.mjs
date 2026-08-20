@@ -33,7 +33,7 @@ test("server-renders the activity creation experience", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>AI 共创场<\/title>/i);
-  assert.match(html, /让每一次共创/);
+  assert.match(html, /把每个人的 AI/);
   assert.match(html, /AI Prompt 挑战赛/);
   assert.match(html, /空白共创/);
   assert.match(html, /3–12 人/);

@@ -14,7 +14,7 @@ export default function Home() {
 
       <section className="hero">
         <p className="eyebrow">CREATE AN ACTIVITY</p>
-        <h1>让每一次共创，<br />从清晰开始。</h1>
+        <h1>把每个人的 AI，<br />变成团队的智慧。</h1>
         <p className="hero-copy">
           使用邀请码创建独立活动。完成配置后，你会获得组织、主持、参赛、大屏与报告入口。
         </p>
