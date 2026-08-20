@@ -125,7 +125,7 @@ test("host can run two complete rounds with manual stage changes", async () => {
   );
 });
 
-test("manual stage completion freezes earlier input and score rules stay simple", async () => {
+test("manual stage completion freezes earlier input and allows peer-vote-only results", async () => {
   const store = setup();
   await saveRoundEntry("event-a", "recover-a", { v1: "已保存回答" }, store);
   await advanceLiveEvent("host-a", store);
@@ -142,10 +142,8 @@ test("manual stage completion freezes earlier input and score rules stay simple"
     saveAiScore("host-a", "seat-a", 11, store),
     (error) => error instanceof LiveEventError && error.code === "invalid-score",
   );
-  await assert.rejects(
-    advanceLiveEvent("host-a", store),
-    (error) => error instanceof LiveEventError && error.code === "invalid-score",
-  );
+  await advanceLiveEvent("host-a", store);
+  assert.equal((await getHostLiveEvent("host-a", store)).activity.stage, "results");
 });
 
 test("host can correct a completed round AI score while the next round is live", async () => {

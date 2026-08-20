@@ -92,7 +92,7 @@ const stageLabels: Record<LiveStage, string> = {
   voting: "匿名互评",
   reveal: "身份揭晓",
   discussion: "自由交流",
-  scoring: "AI 评分",
+  scoring: "可选外部评分",
   results: "本轮结果",
   complete: "活动完成",
 };
@@ -152,7 +152,7 @@ async function roundResults(activity: LiveActivity, store: LiveEventStore, round
   const scoreBySeat = new Map(scores.map((score) => [score.seatId, score.score]));
   return seats
     .map((seat) => {
-      const aiScore = scoreBySeat.get(seat.id) ?? 0;
+      const aiScore = scoreBySeat.get(seat.id);
       const peerVotes = voteCounts.get(seat.id) ?? 0;
       return {
         seatId: seat.id,
@@ -160,13 +160,13 @@ async function roundResults(activity: LiveActivity, store: LiveEventStore, round
         agentName: seat.agentName,
         aiScore,
         votes: peerVotes,
-        roundScore: aiScore + peerVotes,
+        roundScore: (aiScore ?? 0) + peerVotes,
       };
     })
     .sort(
       (left, right) =>
         right.roundScore - left.roundScore ||
-        right.aiScore - left.aiScore ||
+        (right.aiScore ?? 0) - (left.aiScore ?? 0) ||
         left.nickname.localeCompare(right.nickname, "zh-CN"),
     );
 }
@@ -481,15 +481,6 @@ export async function saveHistoricalAiScore(
 
 export async function advanceLiveEvent(hostToken: string, store: LiveEventStore) {
   const activity = await requireActivity(hostToken, "host", store);
-  if (activity.currentStage === "scoring") {
-    const [seats, scores] = await Promise.all([
-      store.listSeats(activity.id),
-      store.listScores(activity.id, activity.currentRoundIndex),
-    ]);
-    if (scores.length < seats.length) {
-      throw new LiveEventError("invalid-score", "请先完成全部 AI 评分，再公布本轮结果。");
-    }
-  }
   const nextStage: Record<Exclude<LiveStage, "complete">, LiveStage> = {
     lobby: "v1",
     v1: "v2",

@@ -44,7 +44,7 @@ export function ReportLive({ token }: { token: string }) {
       <div className="surface-card">
         <div className="surface-meta"><span>活动报告</span><span>{data.activity.stage === "complete" ? "已完成" : "进行中"}</span></div>
         <h1>{data.activity.name}</h1>
-        <p className="hero-copy">导出包含参赛名单、两轮完整题目、V1、追加 Prompt、V2、投票、AI评分和总成绩。</p>
+        <p className="hero-copy">导出包含参赛名单、两轮完整题目、V1、追加 Prompt、V2、互评票数、可选外部评分和总成绩。</p>
         <div className="surface-info">
           <div><small>参赛者</small><b>{data.participants.length} 人</b></div>
           <div><small>轮次</small><b>{data.activity.roundCount} 轮</b></div>

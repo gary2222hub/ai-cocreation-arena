@@ -48,7 +48,7 @@ export function HostLive({ token }: { token: string }) {
     if (data.activity.stage === "v1") return `${data.answers.filter((answer) => answer.v1).length} / ${data.seats.length} 已保存 V1`;
     if (data.activity.stage === "v2") return `${data.answers.filter((answer) => answer.improvementPrompt && answer.v2).length} / ${data.seats.length} 已保存 V2`;
     if (data.activity.stage === "voting") return `${data.votes.length} / ${data.seats.length} 已投票`;
-    if (data.activity.stage === "scoring") return `${data.scores.length} / ${data.seats.length} 已评分`;
+    if (data.activity.stage === "scoring") return data.scores.length ? `${data.scores.length} / ${data.seats.length} 已补充外部评分` : "默认按互评票数";
     return `${data.seats.length} 名参赛者`;
   }, [data]);
 
@@ -82,16 +82,16 @@ export function HostLive({ token }: { token: string }) {
     event.preventDefault();
     if (!data) return;
     const form = new FormData(event.currentTarget);
-    const missing = data.seats.some((seat) => !/^\d+$/.test(String(form.get(seat.id) ?? "")));
-    if (missing) {
-      setError("请为每个作品填写 0–10 的整数评分。");
+    const entries = data.seats.map((seat) => ({ seatId: seat.id, value: String(form.get(seat.id) ?? "").trim() }));
+    if (entries.some(({ value }) => value && !/^(?:0|[1-9]|10)$/.test(value))) {
+      setError("外部评分应为 0–10 的整数；留空则只采用互评票数。");
       return;
     }
     setWorking(true);
     setError("");
     try {
-      for (const seat of data.seats) {
-        await post({ action: "score", seatId: seat.id, score: Number(form.get(seat.id)) });
+      for (const entry of entries) {
+        if (entry.value) await post({ action: "score", seatId: entry.seatId, score: Number(entry.value) });
       }
       await refresh();
     } catch (caught) {
@@ -111,6 +111,23 @@ export function HostLive({ token }: { token: string }) {
     }));
     setScoringBriefCopied(true);
     window.setTimeout(() => setScoringBriefCopied(false), 1_500);
+  }
+
+  function downloadScoringBrief() {
+    if (!data?.activity.round) return;
+    const text = buildAiScoringBrief({
+      roundNumber: data.activity.roundNumber,
+      title: data.activity.round.title,
+      prompt: data.activity.round.prompt,
+      answers: data.answers,
+    });
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${data.activity.name}-第${data.activity.roundNumber}轮匿名作品.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   if (!data) {
@@ -160,15 +177,16 @@ export function HostLive({ token }: { token: string }) {
           {activity.stage === "scoring" && (
             <form className="score-list" onSubmit={saveScores} key={activity.roundIndex}>
               <div className="ai-scoring-guide">
-                <b>使用你自己的 AI 工具评分</b>
-                <p>复制匿名评分材料，发送给你选择的 AI 服务或已接入的自有 API；再把返回的分数填入下方。公共版本不会调用任何默认模型账户。</p>
-                <button type="button" className="secondary-button" onClick={() => void copyScoringBrief()}>{scoringBriefCopied ? "评分材料已复制" : "复制匿名评分材料"}</button>
+                <b>默认按互评票数公布</b>
+                <p>无需外部 AI 即可直接公布结果。若希望补充评分，可复制或下载全部匿名作品，交给你自己的 AI 工具，再将返回分数填入下方。</p>
+                <button type="button" className="secondary-button" onClick={() => void copyScoringBrief()}>{scoringBriefCopied ? "匿名作品已复制" : "复制全部匿名作品"}</button>
+                <button type="button" className="secondary-button" onClick={downloadScoringBrief}>下载全部匿名作品</button>
               </div>
               {data.seats.map((seat) => (
-                <label key={seat.id}><span>作品 {data.answers.find((answer) => answer.seatId === seat.id)?.anonymousLabel} · {seat.nickname}<small>{seat.agentName}</small></span><input aria-label={`${seat.nickname} 的 AI 评分`} name={seat.id} type="number" min={0} max={10} step={1} defaultValue={data.scores.find((score) => score.seatId === seat.id)?.score} required /></label>
+                <label key={seat.id}><span>作品 {data.answers.find((answer) => answer.seatId === seat.id)?.anonymousLabel} · {seat.nickname}<small>{seat.agentName}</small></span><input aria-label={`${seat.nickname} 的外部评分`} name={seat.id} type="number" min={0} max={10} step={1} defaultValue={data.scores.find((score) => score.seatId === seat.id)?.score} /></label>
               ))}
-              <button className="secondary-button" disabled={working}>{working ? "正在保存…" : "保存评分结果"}</button>
-              <p>简单规则：单轮成绩 = AI 评分（0–10）+ 获得的互评票数。</p>
+              <button className="secondary-button" disabled={working}>{working ? "正在保存…" : "保存外部评分（可选）"}</button>
+              <p>默认规则：单轮成绩 = 获得的互评票数；填写外部评分后，单轮成绩 = 外部评分（0–10）+ 互评票数。</p>
             </form>
           )}
 
@@ -183,11 +201,11 @@ export function HostLive({ token }: { token: string }) {
           {activity.stage === "discussion" && <div className="manual-note">自由交流不会自动结束。确认现场交流完成后再点击结束。</div>}
           {error && <p className="form-error" role="alert">{error}</p>}
           {activity.stage !== "complete" && (
-            <button className="primary-button" disabled={working || (activity.stage === "scoring" && data.scores.length < data.seats.length)} onClick={() => void advance()}>
+            <button className="primary-button" disabled={working} onClick={() => void advance()}>
               {working ? "正在处理…" : buttonLabel}
             </button>
           )}
-          {activity.stage === "scoring" && data.scores.length < data.seats.length && <small>保存全部评分后才能公布结果。</small>}
+          {activity.stage === "scoring" && <small>无需填写外部评分；直接公布即按互评票数排名。</small>}
         </aside>
       </section>
     </main>
@@ -199,5 +217,5 @@ function HostAwards({ awards }: { awards: LiveEventSnapshot["awards"] }) {
 }
 
 function HostResults({ title, rows }: { title: string; rows: Array<{ seatId: string; nickname: string; agentName: string; score: number; aiScore?: number; votes?: number }> }) {
-  return <div className="host-result-block"><h2>{title}</h2><div className="result-list">{rows.map((row, index) => <div className="result-row" key={row.seatId}><strong>{rankForScore(rows, index)}</strong><div><b>{row.nickname}</b><small>{row.agentName}</small></div>{row.aiScore !== undefined && <small>AI {row.aiScore} + 互评 {row.votes}</small>}<span>{row.score} 分</span></div>)}</div></div>;
+  return <div className="host-result-block"><h2>{title}</h2><div className="result-list">{rows.map((row, index) => <div className="result-row" key={row.seatId}><strong>{rankForScore(rows, index)}</strong><div><b>{row.nickname}</b><small>{row.agentName}</small></div>{row.aiScore !== undefined ? <small>外部 {row.aiScore} + 互评 {row.votes}</small> : <small>互评 {row.votes}</small>}<span>{row.score} 分</span></div>)}</div></div>;
 }

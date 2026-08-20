@@ -12,7 +12,7 @@ const promptRound: RoundConfiguration = {
   prompt: "用 AI 重新定义这个问题，并给出可执行方案。",
   submitMinutes: 8,
   reviewMinutes: 5,
-  scoring: "外部 AI 评分（0–10）+ 互评票数",
+  scoring: "互评票数（可选外部评分加分）",
   award: "第一轮最佳",
 };
 
@@ -21,7 +21,7 @@ const secondPromptRound: RoundConfiguration = {
   prompt: "识别方案最关键的风险，并给出具体应对措施。",
   submitMinutes: 8,
   reviewMinutes: 5,
-  scoring: "外部 AI 评分（0–10）+ 互评票数",
+  scoring: "互评票数（可选外部评分加分）",
   award: "两轮总冠军",
 };
 

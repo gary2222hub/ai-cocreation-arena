@@ -12,7 +12,7 @@ export function buildAdvanceWarning(stage: string, actionLabel: string) {
     v2: "结束后不能提交或修改追加 Prompt 与 V2；未保存的作品不会进入匿名互评。",
     voting: "结束后不能再投票或改票；未投票者将失去本轮互评机会。",
     reveal: "推进后进入自由交流；自由交流不会自动结束。",
-    discussion: "请确认现场交流确实结束。推进后将进入外部 AI 评分。",
+    discussion: "请确认现场交流确实结束。推进后可选择补充外部评分，或直接按互评结果公布。",
     scoring: "公布后本轮评分进入榜单，不能返回修改。",
     results: "推进后上一轮正式结束，不能返回修改本轮内容和成绩。",
   };
@@ -26,7 +26,7 @@ export function rankForScore(rows: Array<{ score: number }>, index: number) {
 }
 
 export function buildOpeningScript(activityName: string) {
-  return `大家早上好，欢迎来到${activityName}。\n\n今天，我们会一起完成两轮挑战。每一轮先提交第一版回答，再用一次追加 Prompt，让方案继续进化。之后会匿名互评、揭晓交流，并使用你选择的 AI 工具完成匿名评分。\n\n请大家留意主持人的口令。一个阶段结束后，内容会立即锁定；没有保存的回答，不能补交，也不会进入后续展示和计分。\n\n现在，请确认网络和自己的 Agent 都已经准备好。放轻松，尽情去想，也期待大家带走一个真正值得尝试的新点子。`;
+  return `大家早上好，欢迎来到${activityName}。\n\n今天，我们会一起完成两轮挑战。每一轮先提交第一版回答，再用一次追加 Prompt，让方案继续进化。之后会匿名互评、揭晓交流，并以大家的互评票数形成结果。\n\n请大家留意主持人的口令。一个阶段结束后，内容会立即锁定；没有保存的回答，不能补交，也不会进入后续展示和计分。\n\n现在，请确认网络和自己的 Agent 都已经准备好。放轻松，尽情去想，也期待大家带走一个真正值得尝试的新点子。`;
 }
 
 export function buildAiScoringBrief(input: {
