@@ -72,11 +72,15 @@
 需要 Node.js `>=22.13.0`。
 
 ```bash
+git clone https://github.com/gary2222hub/ai-cocreation-arena.git
+cd ai-cocreation-arena
 npm ci
 npm run dev
 ```
 
-本项目使用 Cloudflare D1 保存活动数据。首次本地运行前，请将 `drizzle/` 中的迁移应用到本地模拟数据库，并通过私密方式配置一次性创建邀请码。
+这两条 npm 命令已经在本项目中验证过：`npm ci` 安装依赖，`npm run dev` 启动本地预览，默认地址是 `http://localhost:3000/`。
+
+注意：公开仓库不包含任何真实邀请码、活动数据或他人的数据库配置，因此本地预览可以打开界面，但要完整运行“创建活动—参赛—主持—报告”流程，还需要使用者配置自己的 Cloudflare D1 数据库绑定 `DB`，并私下准备一次性创建邀请码。项目当前没有把这一步伪装成一条可直接执行的公共命令。
 
 ## 校验
 
