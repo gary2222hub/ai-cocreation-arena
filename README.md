@@ -69,7 +69,7 @@
 
 ## 本地运行
 
-需要 Node.js `>=22.13.0`。
+需要 Node.js `>=22.13.0`，建议使用 Node.js 22 LTS（Node.js 23 也可安装，但部分依赖可能显示兼容性提示）。
 
 ```bash
 git clone https://github.com/gary2222hub/ai-cocreation-arena.git
