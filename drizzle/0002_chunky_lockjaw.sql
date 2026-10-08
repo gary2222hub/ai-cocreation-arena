@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX `participant_seats_activity_nickname_unique` ON `participant_seats` (`activity_id`,`nickname_normalized`);--> statement-breakpoint
+CREATE UNIQUE INDEX `participant_seats_activity_agent_unique` ON `participant_seats` (`activity_id`,`agent_name_normalized`);
