@@ -6,6 +6,12 @@
 
 项目默认不绑定任何大模型账户，也不要求 API Key；它不会替使用者调用任何模型或产生模型费用。
 
+## 当前公开版本状态
+
+**当前 `main` 是不完整的源码快照，不能直接安装、启动或部署完整活动应用。** 下文的活动流程和五类入口描述的是产品设计与历史实现，不代表当前公开分支已支持这些功能。
+
+截至 2026 年 10 月 8 日，仓库仅保留 README、活动创建首页与表单、活动创建领域逻辑、D1 活动存储适配器及两份测试。可独立运行活动创建逻辑测试；浏览器界面与完整多人活动流程尚不可运行。
+
 ## 它带来的价值
 
 - **把个人 AI 使用变成团队共创**：每个人先独立生成，再用一次追加 Prompt 改进，避免讨论一开始就被少数声音带走。
@@ -67,47 +73,49 @@
 
 最简单的现场分工是：组织者负责创建并保存链接，主持人只使用主持人页，参赛者只使用参赛者页，投影电脑打开现场大屏页。活动链接和房间码一起发给参赛者即可。
 
-## 本地运行
+## 本地检查与测试
 
-需要 Node.js `>=22.13.0`，建议使用 Node.js 22 LTS（Node.js 23 也可安装，但部分依赖可能显示兼容性提示）。
+当前仓库没有 `package.json`、`package-lock.json` 或启动配置，因此 **`npm ci`、`npm run dev`、`npm test` 和 `npm run lint` 均不可用**，也没有可访问的本地预览地址。仅配置 Cloudflare D1 的 `DB` 绑定不能解决这些缺失。
+
+如需检查现有代码，可以使用支持 TypeScript 类型擦除的 Node.js（建议 Node.js 22.13.0 或以上），无需安装 npm 依赖：
 
 ```bash
 git clone https://github.com/gary2222hub/ai-cocreation-arena.git
 cd ai-cocreation-arena
-npm ci
-npm run dev
+node --experimental-strip-types --test tests/activity-creation.test.ts
 ```
 
-这两条 npm 命令已经在本项目中验证过：`npm ci` 安装依赖，`npm run dev` 启动本地预览，默认地址是 `http://localhost:3000/`。
+这条命令验证活动创建、参数校验、邀请码与公开创建、入口权限隔离及配置复制逻辑。2026 年 10 月 8 日在 Node.js 24.19.0 下验证，7 项测试全部通过；它不验证浏览器页面或真实 D1 环境。
 
-注意：公开仓库不包含活动数据或他人的数据库配置，因此本地预览可以打开界面，但要完整运行“创建活动—参赛—主持—报告”流程，还需要使用者配置自己的 Cloudflare D1 数据库绑定 `DB`。配置完成后，任何人都可以直接创建活动，不需要平台邀请码。
+`tests/d1-activity-store.test.ts` 目前不能运行：它依赖已缺失的 `src/d1-live-event-store.ts`、`src/d1-lobby-store.ts`、`src/lobby.ts` 及数据库迁移文件。因此请勿把单份领域测试通过理解为完整应用已通过验证。
 
-## 校验
+## 缺失文件与历史
 
-```bash
-npm test
-npm run lint
-```
+安装文件和现场运行手册并非从未提交：它们在历史提交中存在，但在 [766ad79](https://github.com/gary2222hub/ai-cocreation-arena/commit/766ad79b6b5b1d141d04dbeb7ad787379b5cd6df)（2026 年 8 月 20 日，`docs: explain activity interfaces and roles`）中与大量实现文件一起删除，共涉及 89 个文件。后续提交只恢复了部分活动创建代码与测试。
 
-`npm test` 会依次运行核心活动测试、生产构建和页面渲染检查。
+该提交说明没有解释删除原因；仅凭公开历史，无法确定这是误删还是有意缩减公开内容。当前文档按实际文件状态说明支持范围，不假定完整应用可用。
+
+[3033dd3 历史快照](https://github.com/gary2222hub/ai-cocreation-arena/tree/3033dd3)包含删除前的实现，可供调查和参考，未作为当前可运行版本验证。完整恢复需要同时审查并补齐依赖及有效锁文件、布局与样式、API 路由、候场与现场逻辑、数据库结构和迁移、运行及部署配置，并重新验证安装、构建和端到端活动流程；只补回安装文件不足以修复应用。
+
+现场运行手册在当前分支缺失；[历史现场运行手册](https://github.com/gary2222hub/ai-cocreation-arena/blob/3033dd3/docs/LIVE-RUNBOOK.md)仅供了解历史设计，不是当前版本的运行指南。
 
 ## 部署与数据边界
 
-- 部署时需要为运行环境提供 D1 数据库绑定 `DB`。
-- `.openai/hosting.json` 中的项目 ID 只是占位符；请替换为自己的部署项目，不要复用他人的配置。
+当前公开分支不支持直接部署。历史实现使用 Cloudflare D1 数据库绑定 `DB`，但当前缺少 API、数据库迁移和部署配置，包括 `.openai/hosting.json`。
+
 - 不要把 `.env`、活动链接、房间码或参会者导出数据提交到仓库。
-- 项目不内置任何模型供应商或 API Key；外部 AI 评分完全由活动使用者自行选择和执行。
+- 现有代码不内置任何模型供应商或 API Key；产品设计中的外部 AI 评分由活动使用者自行选择和执行。
 
-更详细的现场主持步骤见 [docs/LIVE-RUNBOOK.md](docs/LIVE-RUNBOOK.md)。
+## 当前项目结构
 
-## 项目结构
+- `app/page.tsx` 与 `app/create-activity-form.tsx`：活动创建首页与表单；依赖的页面运行环境和 API 未包含在当前分支中。
+- `src/activity-creation.ts`：活动创建、配置校验、入口权限与内存存储实现。
+- `src/d1-activity-store.ts`：D1 活动存储适配器；需要数据库结构与 D1 运行环境。
+- `tests/activity-creation.test.ts`：可独立运行的活动创建逻辑测试。
+- `tests/d1-activity-store.test.ts`：依赖缺失实现与迁移的 D1 测试，当前不可运行。
 
-- `app/`：参赛者、主持人、大屏和报告页面，以及 API 路由
-- `src/`：活动、候场、现场阶段与评分规则
-- `db/` 与 `drizzle/`：D1 数据库结构和迁移
-- `tests/`：核心流程与页面渲染测试
-- `docs/adr/`：关键产品与技术决策
+当前分支没有 `db/`、`drizzle/`、`docs/adr/` 或完整的主持、参赛、大屏、报告页面。
 
 ## 许可证
 
-本项目采用 [MIT License](LICENSE)。
+历史版本曾包含 MIT 许可证文件，但当前分支的 `LICENSE` 已被删除。可查看[历史许可证文件](https://github.com/gary2222hub/ai-cocreation-arena/blob/3033dd3/LICENSE)；当前分支未恢复该文件。
